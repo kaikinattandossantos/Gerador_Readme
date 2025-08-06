@@ -107,7 +107,20 @@ body {
 
 .screen {
     width: 100%;
+    animation: fadeInUp 0.5s ease-out forwards;
 }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 .hidden {
     display: none !important;
@@ -173,6 +186,24 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
 }
 
+.consent-group {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.consent-group label {
+    font-size: 0.8rem;
+    color: var(--text-dark);
+    cursor: pointer;
+}
+
+#consent-checkbox {
+    accent-color: var(--primary-blue);
+}
+
 #analyze-btn {
     width: 100%;
     padding: 15px;
@@ -194,6 +225,13 @@ body {
     background: var(--primary-hover);
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+#analyze-btn:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .results-header {
@@ -223,8 +261,10 @@ body {
     transition: all 0.3s ease;
     background: var(--primary-gradient);
     color: var(--text-light);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     margin-bottom: 20px;
-    gap: 12px;
 }
 .main-actions button:hover {
     background: var(--primary-hover);
@@ -306,7 +346,7 @@ body {
 #close-modal-btn { background: none; border: none; color: var(--text-dark); font-size: 1.5rem; cursor: pointer; transition: color 0.3s ease; }
 #close-modal-btn:hover { color: var(--text-light); }
 
-.modal-content { padding: 0; max-height: 60vh; overflow-y: auto; }
+.modal-content { padding: 0; max-height: 70vh; overflow-y: auto; }
 .diff-view { display: flex; }
 .code-pane { width: 50%; }
 .code-pane h4 { padding: 10px 20px; background-color: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-weight: 500; }
@@ -322,6 +362,161 @@ body {
 .token-operator { color: #d4d4d4; }
 .diff-add { background-color: var(--diff-add-bg); display: block; }
 .diff-remove { background-color: var(--diff-remove-bg); display: block; text-decoration: line-through; }
+
+.modal-details {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+}
+.modal-details h4 {
+    color: var(--text-light);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.modal-details p {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+.detail-tag {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+.tag-security { background-color: rgba(220, 53, 69, 0.2); color: var(--critical); }
+.tag-maintenance { background-color: rgba(255, 193, 7, 0.2); color: var(--medium); }
+.tag-style { background-color: rgba(40, 167, 69, 0.2); color: var(--low); }
+
+.section-description {
+    color: var(--text-dark);
+    margin-bottom: 25px;
+    max-width: 800px;
+}
+
+.complexity-analyzer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.code-editor-container {
+    background: var(--code-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.editor-header {
+    padding: 10px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--border-color);
+}
+
+#language-selector {
+    background: var(--bg-light-glass);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 5px 10px;
+}
+
+#code-input {
+    width: 100%;
+    height: 300px;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    padding: 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+#code-input:focus {
+    outline: none;
+}
+
+#analyze-complexity-btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-top: 1px solid var(--border-color);
+    background: var(--primary-gradient);
+    color: var(--text-light);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+#analyze-complexity-btn:hover {
+    background: var(--primary-hover);
+}
+
+.complexity-results {
+    background: transparent;
+    border: none;
+}
+
+.complexity-results h3 {
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.complexity-badge {
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 25px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+}
+
+.complexity-badge.good { border-color: var(--low); color: var(--low); box-shadow: 0 0 20px rgba(6, 214, 160, 0.4); }
+.complexity-badge.medium { border-color: var(--medium); color: var(--medium); box-shadow: 0 0 20px rgba(255, 209, 102, 0.4); }
+.complexity-badge.bad { border-color: var(--critical); color: var(--critical); box-shadow: 0 0 20px rgba(239, 71, 111, 0.4); }
+
+.result-section {
+    background: var(--code-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.result-section h4 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.result-section ul {
+    list-style: none;
+    padding-left: 5px;
+}
+
+.result-section li {
+    padding: 10px;
+    border-left: 3px solid var(--border-color);
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+.result-section li:hover {
+    border-left-color: var(--primary-blue);
+}
 
 .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 4px solid #fff; width: 20px; height: 20px; animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
