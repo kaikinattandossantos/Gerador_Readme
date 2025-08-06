@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.getElementById('close-modal-btn');
 
     async function fetchAnalysisFromBackend(repoUrl) {
-        console.log("Simulando chamada para o backend com a URL:", repoUrl);
         return new Promise(resolve => {
             setTimeout(() => {
                 const mockApiResponse = {
@@ -239,13 +238,13 @@ npm start
 
     particlesJS("particles-js", {
         "particles": {
-            "number": { "value": 50, "density": { "enable": true, "value_area": 800 } },
+            "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
             "color": { "value": "#ffffff" },
             "shape": { "type": "circle" },
-            "opacity": { "value": 0.5, "random": true },
+            "opacity": { "value": 0.6, "random": true },
             "size": { "value": 3, "random": true },
-            "line_linked": { "enable": true, "distance": 150, "color": "#007bff", "opacity": 0.4, "width": 1 },
-            "move": { "enable": true, "speed": 1, "direction": "none", "random": false, "straight": false, "out_mode": "out" }
+            "line_linked": { "enable": true, "distance": 150, "color": "#007bff", "opacity": 0.5, "width": 1 },
+            "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out" }
         },
         "interactivity": {
             "detect_on": "canvas",
