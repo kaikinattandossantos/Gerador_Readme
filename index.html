@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocSync AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div id="particles-js"></div>
+
+    <div class="app-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <span>DocSync AI</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-target="input-screen"><a href="#"><i class="fas fa-home"></i> Início</a></li>
+                <li class="menu-item" data-target="readme-screen"><a href="#"><i class="fas fa-file-alt"></i> README Gerado</a></li>
+                <li class="menu-item" data-target="bugs-screen"><a href="#"><i class="fas fa-bug"></i> Análise de Bugs</a></li>
+            </ul>
+        </nav>
+
+        <main class="main-content">
+            <section id="input-screen" class="screen">
+                <div class="card">
+                    <h1>Documentação README, simplificada.</h1>
+                    <p>Cansado de READMEs desatualizados ou confusos? A DocSync AI analisa seu código e gera uma documentação clara e organizada, para que novos desenvolvedores entendam seu projeto em minutos.</p>
+                    <div class="input-group">
+                        <i class="fab fa-github"></i>
+                        <input type="text" id="repo-url" placeholder="Cole a URL do seu repositório GitHub aqui">
+                    </div>
+                    <button id="analyze-btn">
+                        <span class="btn-text">Gerar Documentação README</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </div>
+            </section>
+
+            <section id="readme-screen" class="screen hidden">
+                 <header class="results-header">
+                    <h2>README.md para: <span class="repo-name"></span></h2>
+                    <div class="main-actions">
+                        <button id="copy-readme-btn" class="btn-secondary"><i class="fas fa-copy"></i> Copiar</button>
+                        <button id="pr-readme-btn" class="btn-secondary"><i class="fas fa-code-pull-request"></i> Criar Pull Request</button>
+                        <button id="commit-readme-btn"><i class="fas fa-check"></i> Commitar README.md</button>
+                    </div>
+                </header>
+                <div id="readme-content-container" class="readme-render-area">
+                </div>
+            </section>
+
+            <section id="bugs-screen" class="screen hidden">
+                 <header class="results-header">
+                    <h2>Análise de Bugs: <span class="repo-name"></span></h2>
+                    <div class="main-actions">
+                        <button id="generate-branch-btn"><i class="fas fa-code-merge"></i> Gerar Branch com Correções</button>
+                    </div>
+                </header>
+                <div id="bug-list-container" class="bug-list-container">
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="modal-overlay" class="hidden"></div>
+    <div id="modal-container" class="hidden">
+        <div class="modal-header">
+            <div class="modal-title">
+                <h3>Visualização de Alterações</h3>
+                <span id="modal-filepath"></span>
+            </div>
+            <button id="close-modal-btn">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="diff-view">
+                <div class="code-pane">
+                    <h4>Antes</h4>
+                    <pre id="modal-code-before"></pre>
+                </div>
+                <div class="code-pane">
+                    <h4>Depois</h4>
+                    <pre id="modal-code-after"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
