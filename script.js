@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
     const screens = document.querySelectorAll('.screen');
     const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
     const analyzeBtn = document.getElementById('analyze-btn');
@@ -9,8 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const readmeContentContainer = document.getElementById('readme-content-container');
     const btnText = document.querySelector('.btn-text');
     const spinner = document.querySelector('.spinner');
-    let fullReadmeContent = '';
-    let analysisHasBeenPerformed = false;
+    
+    const commitBtn = document.getElementById('commit-readme-btn');
+    const copyBtn = document.getElementById('copy-readme-btn');
+    const prBtn = document.getElementById('pr-readme-btn');
 
     const modalOverlay = document.getElementById('modal-overlay');
     const modalContainer = document.getElementById('modal-container');
@@ -27,47 +30,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const complexityBottlenecks = document.getElementById('complexity-bottlenecks');
     const complexitySuggestions = document.getElementById('complexity-suggestions');
 
+
+    let fullReadmeContent = '';
+    let currentRepoUrl = '';
+    let analysisHasBeenPerformed = false;
+
+
     async function fetchAnalysisFromBackend(repoUrl) {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const mockApiResponse = {
-                    bugs: [
-                        { title: 'SQL Injection na autenticação', branch: 'feature/login', severity: 'critical', filepath: 'src/auth/service.js', codeBefore: `if (user.password === password) {\n  // Logic\n}`, codeAfter: `if (await bcrypt.compare(password, user.password)) {\n  // Logic\n}`, problem: "A senha estava sendo comparada em texto plano, o que é uma falha grave de segurança.", suggestion: "A correção utiliza `bcrypt.compare` para comparar a senha de forma segura, prevenindo ataques de força bruta e rainbow table.", type: "Segurança" },
-                        { title: 'Uso de dependência depreciada', branch: 'main', severity: 'medium', filepath: 'package.json', codeBefore: `"request": "^2.88.2"`, codeAfter: `"axios": "^1.6.0"`, problem: "A biblioteca 'request' não é mais mantida e pode conter vulnerabilidades não corrigidas.", suggestion: "Substituir por uma biblioteca moderna e ativamente mantida como 'axios' melhora a segurança e a manutenibilidade.", type: "Manutenção" },
-                        { title: 'Variável não utilizada', branch: 'develop', severity: 'low', filepath: 'src/utils/helpers.js', codeBefore: `let tempUser = null;\nconsole.log(tempUser);`, codeAfter: ``, problem: "Código morto ou desnecessário pode confundir novos desenvolvedores e aumentar a complexidade do código.", suggestion: "Remover variáveis e código que não são utilizados torna a base de código mais limpa e fácil de entender.", type: "Estilo" },
-                    ],
-                    readme: `<!-- Gerado pela DocSync AI com base nos últimos commits -->
-# Nome do Projeto
-
-![Badge de Licença](https://img.shields.io/badge/license-MIT-blue.svg)
-
-## 📝 Descrição
-
-Este é um projeto de exemplo gerado pela DocSync AI. Ele resolve o problema X e oferece a solução Y, utilizando tecnologias de ponta para garantir performance e segurança.
-
-## 🚀 Instalação
-
-Siga os passos abaixo para configurar o ambiente de desenvolvimento:
-
-1. Clone o repositório:
-\`\`\`bash
-git clone ${repoUrl}
-\`\`\`
-
-2. Instale as dependências:
-\`\`\`bash
-npm install
-\`\`\`
-
-3. Inicie o servidor de desenvolvimento:
-\`\`\`bash
-npm start
-\`\`\`
-`
-                };
-                resolve(mockApiResponse);
-            }, 1000);
+        const response = await fetch("http://localhost:5000/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ repo_url: repoUrl })
         });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Erro desconhecido ao gerar o README");
+        }
+        const data = await response.json();
+        return { 
+            bugs: data.bugs || [], 
+            readme: data.readme || "README.md vazio gerado pela IA."
+        };
+    }
+
+    async function commitReadmeToGithub(repoUrl, readmeContent) {
+        const response = await fetch("http://localhost:5000/commit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                repo_url: repoUrl,
+                readme_content: readmeContent
+            })
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Erro desconhecido ao fazer o commit");
+        }
+        return await response.json();
     }
 
     function showScreen(screenId) {
@@ -87,59 +86,10 @@ npm start
         readmeContentContainer.innerHTML = marked.parse(textToType);
     }
 
-    function highlightSyntax(codeStr) {
-        return codeStr
-            .replace(/</g, '&lt;').replace(/>/g, '&gt;')
-            .replace(/\b(const|let|var|if|else|async|await|return|import|from|export|default|function|for|while)\b/g, '<span class="token-keyword">$&</span>')
-            .replace(/('.*?'|".*?"|`.*?`)/g, '<span class="token-string">$&</span>')
-            .replace(/(\/\/.*)/g, '<span class="token-comment">$&</span>')
-            .replace(/(\w+)(?=\()/g, '<span class="token-function">$&</span>');
-    }
-
-    function renderSideBySideDiff(before, after) {
-        const renderPane = (paneElement, code, diffType) => {
-            paneElement.innerHTML = ''; 
-            const lines = code.split('\n');
-            const lineNumbers = document.createElement('div');
-            lineNumbers.className = 'line-numbers';
-
-            const codeContent = document.createElement('div');
-            
-            lines.forEach((line, index) => {
-                const lineNumber = document.createElement('span');
-                lineNumber.className = 'line-number';
-                lineNumber.textContent = index + 1;
-                lineNumbers.appendChild(lineNumber);
-
-                const codeLine = document.createElement('span');
-                codeLine.className = diffType;
-                codeLine.innerHTML = highlightSyntax(line) || ' ';
-                codeContent.appendChild(codeLine);
-            });
-            
-            paneElement.appendChild(lineNumbers);
-            paneElement.appendChild(codeContent);
-        };
-
-        renderPane(modalCodeBefore, before, 'diff-remove');
-        renderPane(modalCodeAfter, after, 'diff-add');
-    }
-    
-    function populateModalDetails(details) {
-        const tagClass = `tag-${details.type.toLowerCase()}`;
-        modalDetails.innerHTML = `
-            <h4><i class="fas fa-exclamation-circle"></i> Problema</h4>
-            <p>${details.problem}</p>
-            <h4><i class="fas fa-lightbulb"></i> Sugestão da IA</h4>
-            <p>${details.suggestion}</p>
-            <span class="detail-tag ${tagClass}">${details.type}</span>
-        `;
-    }
-
     function populateBugList(bugs) {
         bugListContainer.innerHTML = '';
         if (!bugs || bugs.length === 0) {
-            bugListContainer.innerHTML = '<p>Nenhum bug encontrado!</p>';
+            bugListContainer.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Nenhum problema crítico encontrado na análise inicial!</p></div>';
             return;
         }
 
@@ -154,18 +104,12 @@ npm start
                     <div class="bug-title">
                         <h4>${bug.title}</h4>
                     </div>
-                    <span class="bug-branch">no branch: <b>${bug.branch}</b></span>
+                    <span class="bug-branch">em: <b>${bug.filepath}</b></span>
                 </div>
                 <div class="bug-actions">
                     <div class="severity ${severityClass}">${bug.severity}</div>
-                    <button class="view-changes-btn" 
-                        data-filepath="${bug.filepath}"
-                        data-before='${bug.codeBefore.replace(/'/g, "&apos;")}'
-                        data-after='${bug.codeAfter.replace(/'/g, "&apos;")}'
-                        data-problem="${bug.problem}"
-                        data-suggestion="${bug.suggestion}"
-                        data-type="${bug.type}">
-                        Ver Alterações
+                    <button class="view-details-btn" data-bug='${JSON.stringify(bug)}'>
+                        Ver Detalhes
                     </button>
                 </div>
             `;
@@ -173,26 +117,16 @@ npm start
             bugListContainer.appendChild(bugItem);
         });
     }
-
-    function populateComplexityAnalysis(result) {
-        complexityOverall.textContent = result.complexity;
-        complexityOverall.className = `complexity-badge ${result.rating}`;
-
-        complexityBottlenecks.innerHTML = '';
-        result.bottlenecks.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            complexityBottlenecks.appendChild(li);
-        });
-
-        complexitySuggestions.innerHTML = '';
-        result.suggestions.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            complexitySuggestions.appendChild(li);
-        });
-
-        complexityResultsContainer.classList.remove('hidden');
+    
+    function populateModalDetails(details) {
+        const tagClass = `tag-${details.type.toLowerCase()}`;
+        modalDetails.innerHTML = `
+            <h4><i class="fas fa-exclamation-circle"></i> Problema</h4>
+            <p>${details.problem}</p>
+            <h4><i class="fas fa-lightbulb"></i> Sugestão da IA</h4>
+            <p>${details.suggestion}</p>
+            <span class="detail-tag ${tagClass}">${details.type}</span>
+        `;
     }
 
     consentCheckbox.addEventListener('change', () => {
@@ -208,19 +142,19 @@ npm start
 
         btnText.classList.add('hidden');
         spinner.classList.remove('hidden');
+        analyzeBtn.disabled = true;
 
         try {
             const analysisData = await fetchAnalysisFromBackend(repoUrl);
             fullReadmeContent = analysisData.readme;
+            currentRepoUrl = repoUrl;
             analysisHasBeenPerformed = true;
 
-            const repoName = repoUrl.split('/').slice(-2).join('/');
+            const repoName = repoUrl.split('/').slice(-2).join('/').replace('.git', '');
             repoNameSpans.forEach(span => span.textContent = repoName);
 
             populateBugList(analysisData.bugs);
-            
-            showScreen('readme-screen');
-            
+            showScreen('readme-screen'); 
             await typeReadme(analysisData.readme);
             
             menuItems.forEach(i => i.classList.remove('active'));
@@ -231,6 +165,7 @@ npm start
         } finally {
             btnText.classList.remove('hidden');
             spinner.classList.add('hidden');
+            analyzeBtn.disabled = !consentCheckbox.checked;
         }
     });
 
@@ -238,30 +173,52 @@ npm start
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const target = item.getAttribute('data-target');
-
             if (target === 'input-screen' || target === 'complexity-screen') {
+                showScreen(target);
                 menuItems.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
+            } else if (analysisHasBeenPerformed) {
                 showScreen(target);
-                return;
-            }
-            
-            if (analysisHasBeenPerformed) {
                 menuItems.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
-                showScreen(target);
             } else {
                 alert("Primeiro, analise um repositório para poder navegar.");
             }
         });
     });
 
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(fullReadmeContent).then(() => alert('Conteúdo do README copiado!'));
+    });
+
+    commitBtn.addEventListener('click', async () => {
+        if (!currentRepoUrl || !fullReadmeContent) return;
+        const originalText = commitBtn.innerHTML;
+        commitBtn.innerHTML = '<span class="spinner-btn"></span> Comitando...';
+        commitBtn.disabled = true;
+        try {
+            const result = await commitReadmeToGithub(currentRepoUrl, fullReadmeContent);
+            alert(result.message);
+            if (result.url) window.open(result.url, '_blank');
+        } catch (error) {
+            alert(`Erro: ${error.message}`);
+        } finally {
+            commitBtn.innerHTML = originalText;
+            commitBtn.disabled = false;
+        }
+    });
+
+    prBtn.addEventListener('click', () => {
+        alert("FUNCIONALIDADE FUTURA: Criar um Pull Request com o novo README.md.");
+    });
+    
     bugListContainer.addEventListener('click', (e) => {
-        if (e.target.classList.contains('view-changes-btn')) {
+        if (e.target.classList.contains('view-details-btn')) {
             const button = e.target;
-            modalFilepath.textContent = button.dataset.filepath;
-            renderSideBySideDiff(button.dataset.before, button.dataset.after);
-            populateModalDetails(button.dataset);
+            const bugData = JSON.parse(button.dataset.bug);
+            modalFilepath.textContent = bugData.filepath;
+            populateModalDetails(bugData);
+
             modalOverlay.classList.remove('hidden');
             modalContainer.classList.remove('hidden');
         }
@@ -274,56 +231,10 @@ npm start
 
     closeModalBtn.addEventListener('click', closeModal);
     modalOverlay.addEventListener('click', closeModal);
-
-    document.getElementById('copy-readme-btn').addEventListener('click', () => {
-        navigator.clipboard.writeText(fullReadmeContent).then(() => alert('Conteúdo do README copiado!'));
-    });
-    document.getElementById('pr-readme-btn').addEventListener('click', () => {
-        alert("AÇÃO SIMULADA: Criando Pull Request com o novo README.md...");
-    });
-    document.getElementById('commit-readme-btn').addEventListener('click', () => {
-        alert("AÇÃO SIMULADA: Commitando README.md diretamente no branch principal...");
-    });
-    document.getElementById('generate-branch-btn').addEventListener('click', () => {
-        alert("AÇÃO SIMULADA: Criando branch com correções de bugs...");
-    });
-
+    
     analyzeComplexityBtn.addEventListener('click', () => {
-        const code = codeInput.value;
-        if (!code.trim()) {
-            alert('Por favor, insira um trecho de código para analisar.');
-            return;
-        }
-        
-        const mockAnalysis = {
-            complexity: "O(n²)",
-            rating: "bad",
-            bottlenecks: ["Loop aninhado detectado nas linhas 2-5, resultando em performance quadrática."],
-            suggestions: ["Considere usar um algoritmo de ordenação mais eficiente como Merge Sort ou Quick Sort, que possuem complexidade O(n log n)."]
-        };
-        populateComplexityAnalysis(mockAnalysis);
+        alert("FUNCIONALIDADE FUTURA: A análise de complexidade será integrada com a IA.");
     });
 
     showScreen('input-screen');
-    
-    codeInput.value = `function bubbleSort(arr) {\n  for (let i = 0; i < arr.length; i++) {\n    for (let j = 0; j < arr.length - i - 1; j++) {\n      if (arr[j] > arr[j + 1]) {\n        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];\n      }\n    }\n  }\n  return arr;\n}`;
-
-
-    particlesJS("particles-js", {
-        "particles": {
-            "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
-            "color": { "value": "#ffffff" },
-            "shape": { "type": "circle" },
-            "opacity": { "value": 0.6, "random": true },
-            "size": { "value": 3, "random": true },
-            "line_linked": { "enable": true, "distance": 150, "color": "#007bff", "opacity": 0.5, "width": 1 },
-            "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out" }
-        },
-        "interactivity": {
-            "detect_on": "canvas",
-            "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" } },
-            "modes": { "repulse": { "distance": 100, "duration": 0.4 }, "push": { "particles_nb": 4 } }
-        },
-        "retina_detect": true
-    });
 });
