@@ -16,8 +16,7 @@ HEADERS = {
 }
 
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
-
+model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
 
 def obter_dono_e_repositorio(repo_url):
     try:

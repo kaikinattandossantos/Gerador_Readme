@@ -1,0 +1,52 @@
+# --------------------------------------------------
+# ARQUIVOS DE SEGURANÇA E SEGREDOS (O MAIS IMPORTANTE!)
+# --------------------------------------------------
+# Nunca envie seus segredos (API keys, senhas) para o GitHub.
+# O load_dotenv() usa este arquivo.
+.env
+*.env
+
+# --------------------------------------------------
+# AMBIENTES VIRTUAIS DO PYTHON (venv)
+# --------------------------------------------------
+# Ignora a pasta do ambiente virtual (que contém as 'node_modules' do Python)
+.venv/
+venv/
+env/
+
+# --------------------------------------------------
+# CACHE E ARQUIVOS GERADOS PELO PYTHON
+# --------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --------------------------------------------------
+# ARQUIVOS DE BANCO DE DADOS LOCAL
+# --------------------------------------------------
+# Se você usar SQLite para testes locais
+*.db
+*.sqlite3
+
+# --------------------------------------------------
+# ARQUIVOS DE CONFIGURAÇÃO DE IDEs (VSCode, PyCharm)
+# --------------------------------------------------
+.vscode/
+.idea/
+
+# --------------------------------------------------
+# ARQUIVOS DE LOG
+# --------------------------------------------------
+*.log
+logs/
+
+# --------------------------------------------------
+# ARQUIVOS GERADOS PELO SISTEMA OPERACIONAL
+# --------------------------------------------------
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
